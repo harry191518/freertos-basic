@@ -24,6 +24,9 @@ void help_command(int, char **);
 void host_command(int, char **);
 void mmtest_command(int, char **);
 void test_command(int, char **);
+void new_command(int, char **);
+void TaskWork();
+int  fib(int);
 void _command(int, char **);
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
@@ -37,6 +40,7 @@ cmdlist cl[]={
 	MKCL(mmtest, "heap memory allocation test"),
 	MKCL(help, "help"),
 	MKCL(test, "test new function"),
+	MKCL(new, "create a new task"),
 	MKCL(, ""),
 };
 
@@ -184,6 +188,35 @@ void test_command(int n, char *argv[]) {
     }
 
     host_action(SYS_CLOSE, handle);
+
+    int num = 0, i;
+
+    if(n == 2){
+        for(i=0; i<strlen(argv[1]); i++){
+            num *= 10;
+            num += argv[1][i] -'0';
+        }
+        
+        fio_printf(1, "fib[%s] = %d\r\n", argv[1], fib(num));
+    }   
+    else
+        fio_printf(1, "input error!\r\n");
+       
+}
+
+void new_command(int n, char *argv[]){
+    fio_printf(1, "\r\n");
+
+    portBASE_TYPE task = xTaskCreate(TaskWork, (signed portCHAR *) "newTask", 128, NULL, 1, NULL);
+
+    if(task == pdTRUE)
+        fio_printf(1, "new task create successfully!\r\n");
+    else 
+        fio_printf(1, "failed to create a new task!\r\n");
+}
+
+void TaskWork(){
+    while(1);
 }
 
 void _command(int n, char *argv[]){
@@ -200,4 +233,20 @@ cmdfunc *do_command(const char *cmd){
 			return cl[i].fptr;
 	}
 	return NULL;	
+}
+
+int fib(int n){
+    int a = 0, b = 1, c, i;
+
+    if(n == 0) return 0;
+    else if(n == 1) return 1;
+    else{
+        for(i=2; i<=n; i++){
+            c = a + b;
+            a = b;
+            b = c;
+        }
+    }
+
+    return c;
 }
