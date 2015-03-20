@@ -30,6 +30,7 @@ int  fib(int);
 void _command(int, char **);
 
 #define MKCL(n, d) {.name=#n, .fptr=n ## _command, .desc=d}
+char pwd[20] = "/romfs/";
 
 cmdlist cl[]={
 	MKCL(ls, "List directory"),
@@ -43,6 +44,11 @@ cmdlist cl[]={
 	MKCL(new, "create a new task"),
 	MKCL(, ""),
 };
+
+char *pwd_return() {
+    char *c = pwd;
+    return c;
+}
 
 int parse_command(char *str, char *argv[]){
 	int b_quote=0, b_dbquote=0;
@@ -68,16 +74,25 @@ int parse_command(char *str, char *argv[]){
 void ls_command(int n, char *argv[]){
     fio_printf(1,"\r\n"); 
     int dir;
-    if(n == 0){
-        dir = fs_opendir("");
-    }else if(n == 1){
-        dir = fs_opendir(argv[1]);
-        //if(dir == )
+    if(n == 1){
+        dir = fs_opendir(pwd);
+        if(dir == -1) fio_printf(1, "error\r\n");
+        if(dir == -2) fio_printf(1, "error\r\n");
+    }else if(n == 2){
+        char path[20];
+        if(argv[1][0] == '/') dir = fs_opendir(argv[1]);
+        else {
+            strcpy(path, pwd);
+            strcat(path, argv[1]);
+            dir = fs_opendir(path);
+        }
+        if(dir == -1) fio_printf(1, "error\r\n");
+        if(dir == -2) fio_printf(1, "error\r\n");
     }else{
         fio_printf(1, "Too many argument!\r\n");
         return;
     }
-(void)dir;   // Use dir
+    (void)dir;   // Use dir
 }
 
 int filedump(const char *filename){
@@ -115,8 +130,17 @@ void cat_command(int n, char *argv[]){
 		return;
 	}
 
-    int dump_status = filedump(argv[1]);
-	if(dump_status == -1){
+    char file[20];
+    int dump_status;
+
+    if(argv[1][0] == '/') dump_status = filedump(argv[1]);
+    else {
+        strcpy(file, pwd);
+        strcat(file, argv[1]);
+        dump_status = filedump(file);
+    }
+    
+    if(dump_status == -1){
 		fio_printf(2, "\r\n%s : no such file or directory.\r\n", argv[1]);
     }else if(dump_status == -2){
 		fio_printf(2, "\r\nFile system not registered.\r\n", argv[1]);
