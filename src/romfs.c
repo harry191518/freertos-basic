@@ -83,7 +83,6 @@ const uint8_t * romfs_get_file_by_hash(const uint8_t * romfs, uint32_t h, uint32
 
 static int romfs_open(void * opaque, const char * path, int flags, int mode) {
     uint32_t h = hash_djb2((const uint8_t *) path, -1);
-    fio_printf(1, "%s\r\n", path);
     const uint8_t * romfs = (const uint8_t *) opaque;
     const uint8_t * file;
     int r = -1;
@@ -109,17 +108,13 @@ static int romfs_open(void * opaque, const char * path, int flags, int mode) {
 
 static int romfs_ls(void * opaque, const char * path) {
     uint32_t h = hash_djb2((const uint8_t *) path, -1);
-    fio_printf(1, "%s\r\n", path);
-    fio_printf(1, "%x\r\n", h);
     const uint8_t *romfs = (const uint8_t *) opaque;
-    fio_printf(1, "%x\r\n%x\r\n", romfs, get_unaligned(romfs));
     int r = -1;
 
     const uint8_t *meta;
 
     for(meta = romfs; get_unaligned(meta) && get_unaligned(meta + 4); meta += get_unaligned(meta + 4) + 12) {
         if (get_unaligned(meta + 8) == h) {
-            //fio_printf(1, "%x\r\n", get_unaligned(meta+8));
             char name[256];
             for (int i = 0; i < 256; i++) {
                 if (!(*(name + i) = *(meta + 12 + i)))
@@ -129,7 +124,6 @@ static int romfs_ls(void * opaque, const char * path) {
             r = 1;
         }
     }
-
     fio_printf(1, "\r\n");
 
     return r;
