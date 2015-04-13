@@ -79,13 +79,28 @@ void ls_command(int n, char *argv[]){
         if(dir == -1) fio_printf(1, "error\r\n");
         if(dir == -2) fio_printf(1, "error\r\n");
     }else if(n == 2){
-        char path[20];
-        if(argv[1][0] == '/') dir = fs_opendir(argv[1]);
+        char path[50];
+        if(argv[1][0] == '/') strcpy(path, argv[1]);
         else {
             strcpy(path, pwd);
             strcat(path, argv[1]);
-            dir = fs_opendir(path);
         }
+
+        int p = 0;
+        for(int i=0; i<strlen(path); i++) 
+            if(path[i] == '/') 
+            {
+                if(path[i+1] == '.' && path[i+2] == '.')
+                {
+                    int j = i + 3, k = p;
+                    while(j <= strlen(path)) path[k++] = path[j++];
+                    i = p;
+                }
+                else p = i;
+            }
+
+        dir = fs_opendir(path);
+
         if(dir == -1) fio_printf(1, "error\r\n");
         if(dir == -2) fio_printf(1, "error\r\n");
     }else{
@@ -130,15 +145,29 @@ void cat_command(int n, char *argv[]){
 		return;
 	}
 
-    char file[20];
+    char file[50];
     int dump_status;
 
-    if(argv[1][0] == '/') dump_status = filedump(argv[1]);
+    if(argv[1][0] == '/') strcpy(file, argv[1]);
     else {
         strcpy(file, pwd);
         strcat(file, argv[1]);
-        dump_status = filedump(file);
     }
+
+    int p = 0;
+    for(int i=0; i<strlen(file); i++) 
+        if(file[i] == '/') 
+        {
+            if(file[i+1] == '.' && file[i+2] == '.')
+            {
+                int j = i + 3, k = p;
+                while(j <= strlen(file)) file[k++] = file[j++];
+                i = p;
+            }
+            else p = i;
+        }
+fio_printf(1, "\r\n%s\r\n", file);
+    dump_status = filedump(file);
     
     if(dump_status == -1){
 		fio_printf(2, "\r\n%s : no such file or directory.\r\n", argv[1]);
